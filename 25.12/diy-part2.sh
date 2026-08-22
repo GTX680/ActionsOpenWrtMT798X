@@ -87,14 +87,91 @@ else
   fi
 fi
 
+# ---------------------------------------------------------
+# Remove legacy iptables dependencies from Docker (dockerd)
+# ---------------------------------------------------------
+DOCKER_MAKEFILE="feeds/packages/utils/dockerd/Makefile"
 
-#修改argon主题字体和颜色
-#if [ -d *"luci-theme-argon"* ]; then
-#	echo " "
-#	cd ./luci-theme-argon/
-#	sed -i "s/primary '.*'/primary '#31a1a1'/; s/'0.2'/'0.5'/; s/'none'/'bing'/; s/'600'/'normal'/" ./luci-app-argon-config/root/etc/config/argon
-#	cd $PKG_PATH && echo "theme-argon has been fixed!"
-#fi
+if [ -f "$DOCKER_MAKEFILE" ]; then
+    echo "Patching Docker Makefile to remove legacy iptables dependencies..."
+    # Remove iptables modules from the DEPENDS line
+    sed -i 's/+iptables-mod-extra//g' "$DOCKER_MAKEFILE"
+    sed -i 's/+iptables//g' "$DOCKER_MAKEFILE"
+    sed -i 's/+ip6tables//g' "$DOCKER_MAKEFILE"
+    sed -i 's/+kmod-ipt-nat6//g' "$DOCKER_MAKEFILE"
+    sed -i 's/+kmod-ipt-nat//g' "$DOCKER_MAKEFILE"
+    sed -i 's/+kmod-ipt-physdev//g' "$DOCKER_MAKEFILE"
+    # Clean up any trailing double plusses or spaces left over from deletions
+    sed -i 's/++/\+/g' "$DOCKER_MAKEFILE"
+    sed -i 's/ \+/ /g' "$DOCKER_MAKEFILE"
+else
+    echo "Warning: Docker Makefile not found at $DOCKER_MAKEFILE"
+fi
+
+# Force Docker daemon to use nftables natively
+mkdir -p files/etc/docker
+cat <<EOF > files/etc/docker/daemon.json
+{
+  "iptables": false,
+  "nftables": "enabled"
+}
+EOF
+
+cat > files/etc/sysctl.d/99-mt7986a-optimize.conf << 'SYSCTL'
+
+# --- 1. 队列与拥塞控制 (低延迟核心) ---
+# 使用 fq_codel 队列，这是目前降低延迟的神器
+net.core.default_qdisc = fq_codel
+# 使用 BBR 拥塞控制算法，利用 2.5G 高带宽
+net.ipv4.tcp_congestion_control = bbr
+# --- 2. TCP 行为优化 ---
+# 优先考虑低延迟
+net.ipv4.tcp_low_latency = 1
+# 关闭自动软木塞，减少小包发送延迟 (保持关闭以保证游戏响应)
+net.ipv4.tcp_autocorking = 0
+# 加快连接回收
+net.ipv4.tcp_fin_timeout = 15
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_slow_start_after_idle = 0
+# 开启 TCP Fast Open
+net.ipv4.tcp_fastopen = 3
+# 更好的 MTU 处理 (避免PPPoE环境下的MTU黑洞)
+net.ipv4.tcp_mtu_probing = 1
+# 防止 TCP 队列延迟过大 (适配 2.5G 高吞吐)
+net.ipv4.tcp_limit_output_bytes = 1048576
+# --- 3. 内存缓冲区调整 (适配 2GB RAM + 2.5G 网络) ---
+# 将上限提升至 16MB，确保高带宽下载不卡顿，同时 fq_codel 会负责抑制延迟
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+# 调整默认值，适中即可
+net.core.rmem_default = 262144
+net.core.wmem_default = 262144
+# TCP 缓冲区：最小值 -> 默认值 -> 最大值
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+# TCP 内存压力控制 (单位：页)
+# 适配 2GB 内存，给予 TCP 充足的内存空间
+net.ipv4.tcp_mem = 32768 65536 131072
+# --- 4. 监听与连接队列 ---
+net.core.somaxconn = 1024
+net.ipv4.tcp_max_syn_backlog = 1024
+# --- 5. UDP 精细化分配 (游戏/语音保命优化) ---
+# 普通UDP（视频流/DNS）：30秒释放，腾出槽位，防止 conntrack 表满
+net.netfilter.nf_conntrack_udp_timeout = 30
+# 游戏UDP流（王者/语音）：必须180秒！防止局内掉线重连
+net.netfilter.nf_conntrack_udp_timeout_stream = 180
+# 连接追踪表上限 (大内存路由器建议调大，避免表满丢包)
+net.netfilter.nf_conntrack_max = 262144
+# --- 6. IPv6 专项优化 ---
+# 邻居表大小优化 (防止 2.5G 高负载下表满卡顿)
+net.ipv6.neigh.default.gc_thresh1 = 1024
+net.ipv6.neigh.default.gc_thresh2 = 2048
+net.ipv6.neigh.default.gc_thresh3 = 4096
+# 限制单接口 IPv6 地址数量，节省 CPU
+net.ipv6.conf.all.max_addresses = 2
+SYSCTL
+
+
 
 # 修改默认 IP (192.168.30.1)
 sed -i 's/192.168.1.1/192.168.2.1/g' package/base-files/files/bin/config_generate
