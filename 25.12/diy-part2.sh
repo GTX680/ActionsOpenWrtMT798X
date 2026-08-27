@@ -117,6 +117,7 @@ cat <<EOF > files/etc/docker/daemon.json
 }
 EOF
 
+mkdir -p files/etc/sysctl.d
 cat > files/etc/sysctl.d/99-mt7986a-optimize.conf << 'SYSCTL'
 # --- 1. 队列与拥塞控制 (低延迟核心) ---
 # 使用 fq_codel 队列，这是目前降低延迟的神器
