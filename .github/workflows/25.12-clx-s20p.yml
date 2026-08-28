@@ -367,7 +367,7 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
     # =========================================================
-    # 7.5 修改软件源版本号：25.12-SNAPSHOT -> 25.12.5
+    # 7.5 修改软件源版本号：25.12-SNAPSHOT -> 25.12.1
     # ---------------------------------------------------------
     # 说明：
     #   ImmortalWrt 25.12 起包管理器由 opkg 改为 apk，
@@ -377,7 +377,7 @@ jobs:
     #   编译 base-files 包时会被复制进 rootfs 并打进步田镜像。
     #   因此只需在编译前 sed 这个模板，固件里即为修改后的版本。
     # =========================================================
-    - name: Patch distfeeds.list (25.12-SNAPSHOT -> 25.12.5)
+    - name: Patch distfeeds.list (25.12-SNAPSHOT -> 25.12.1)
       id: patch_distfeeds
       run: |
         cd openwrt
@@ -387,8 +387,8 @@ jobs:
           # 修改前备份一份，方便 diff 查看
            cp "$SRC_FILE" "$SRC_FILE.bak"
            # 用 | 作为 sed 分隔符，避免 URL 中的 / 需要转义
-           # 把所有 25.12-SNAPSHOT 替换为 25.12.5（对应官方 release 源地址格式）
-           sed -i 's|25\.12-SNAPSHOT|25.12.5|g' "$SRC_FILE"
+           # 把所有 25.12-SNAPSHOT 替换为 25.12.1（对应官方 release 源地址格式）
+           sed -i 's|25\.12-SNAPSHOT|25.12.1|g' "$SRC_FILE"
            echo "===== 模板文件修改后内容 ($SRC_FILE) ====="
            cat "$SRC_FILE"
            echo "=========================================="
@@ -405,14 +405,14 @@ jobs:
               # 基于修改后的模板生成覆盖文件
               cp "$SRC_FILE" "$OVERLAY_DIR/distfeeds.list"
             else
-              # 极端情况：模板文件不存在，则手工生成一份标准 25.12.5 源列表
+              # 极端情况：模板文件不存在，则手工生成一份标准 25.12.1 源列表
               # 注意：arch 请按实际设备调整（mt7986 为 aarch64_cortex-a53）
               cat > "$OVERLAY_DIR/distfeeds.list" <<'EOF'
-            src/gz immortalwrt_base https://downloads.immortalwrt.org/releases/25.12.5/packages/aarch64_cortex-a53/base
-            src/gz immortalwrt_luci https://downloads.immortalwrt.org/releases/25.12.5/packages/aarch64_cortex-a53/luci
-            src/gz immortalwrt_packages https://downloads.immortalwrt.org/releases/25.12.5/packages/aarch64_cortex-a53/packages
-            src/gz immortalwrt_routing https://downloads.immortalwrt.org/releases/25.12.5/packages/aarch64_cortex-a53/routing
-            src/gz immortalwrt_telephony https://downloads.immortalwrt.org/releases/25.12.5/packages/aarch64_cortex-a53/telephony
+            src/gz immortalwrt_base https://downloads.immortalwrt.org/releases/25.12.1/packages/aarch64_cortex-a53/base
+            src/gz immortalwrt_luci https://downloads.immortalwrt.org/releases/25.12.1/packages/aarch64_cortex-a53/luci
+            src/gz immortalwrt_packages https://downloads.immortalwrt.org/releases/25.12.1/packages/aarch64_cortex-a53/packages
+            src/gz immortalwrt_routing https://downloads.immortalwrt.org/releases/25.12.1/packages/aarch64_cortex-a53/routing
+            src/gz immortalwrt_telephony https://downloads.immortalwrt.org/releases/25.12.1/packages/aarch64_cortex-a53/telephony
          EOF
         fi
 
@@ -425,7 +425,7 @@ jobs:
               echo "❌ 仍存在 25.12-SNAPSHOT，替换失败"
               exit 1
             else
-              echo "✅ 替换完成：所有源地址已从 25.12-SNAPSHOT 改为 25.12.5"
+              echo "✅ 替换完成：所有源地址已从 25.12-SNAPSHOT 改为 25.12.1"
         fi
     # =========================================================
     # 8. 编译固件
