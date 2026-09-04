@@ -28,15 +28,17 @@ git clone --depth=1 -b dev https://github.com/vernesong/OpenClash.git feeds/luci
 
 # Nikki / Momo
 #git clone --depth=1 https://github.com/nikkinikki-org/OpenWrt-nikki.git package/custom/nikki
-git clone --depth=1 https://github.com/nikkinikki-org/OpenWrt-momo.git package/custom/momo
+#git clone --depth=1 https://github.com/nikkinikki-org/OpenWrt-momo.git package/custom/momo
+
 
 # Daed
+git clone --depth=1 https://github.com/QiuSimons/luci-app-honk.git package/custom/daed-honk
 #git clone --depth=1 -b kix https://github.com/QiuSimons/luci-app-daed.git package/custom/daed
 # 添加 vmlinux-btf 模块
-#git clone --depth=1 https://github.com/QiuSimons/vmlinux-btf.git package/custom/vmlinux-btf
-
+git clone --depth=1 https://github.com/QiuSimons/vmlinux-btf.git package/custom/vmlinux-btf
+git clone --depth=1 https://github.com/kenzok8/openwrt-daede.git package/custom/daede
 # SSR+
-#git clone --depth=1 https://github.com/fw876/helloworld.git package/custom/ssrp
+git clone --depth=1 https://github.com/fw876/helloworld.git package/custom/ssrp
 
 # 功能插件
 #git clone --depth=1 https://github.com/sirpdboy/luci-app-poweroffdevice.git package/custom/poweroffdevice
@@ -67,9 +69,9 @@ git clone --depth=1 https://github.com/EasyTier/luci-app-easytier.git package/cu
 
 # 主题
 #git clone --depth=1 -b openwrt-25.12 https://github.com/sbwml/luci-theme-argon.git package/custom/luci-theme-argon
-git clone --depth=1 -b master https://github.com/jerrykuku/luci-theme-argon.git package/custom/luci-theme-argon
-git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora.git package/custom/luci-theme-aurora
-git clone --depth=1 https://github.com/eamonxg/luci-app-aurora-config.git package/custom/luci-app-aurora-config
+#git clone --depth=1 -b master https://github.com/jerrykuku/luci-theme-argon.git package/custom/luci-theme-argon
+#git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora.git package/custom/luci-theme-aurora
+#git clone --depth=1 https://github.com/eamonxg/luci-app-aurora-config.git package/custom/luci-app-aurora-config
 
 # change the default theme:
 sed -i 's/+luci-theme-bootstrap/+luci-theme-argon/g; s/default Bootstrap theme/Argon theme/g' feeds/luci/collections/luci-light/Makefile
